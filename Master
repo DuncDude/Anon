@@ -1,0 +1,213 @@
+
+#ANon
+# an system for storing password and user idenites  to better stay anon online
+
+#Libraies
+import os
+
+import json
+
+import random
+
+import fnmatch
+#global Varibles
+#Random values for profile creatiom
+rand = [
+	["john","andy","sarah","Jess"],
+	["male","female"],
+	["Catcher in the Rye", "LOTR", "On The Road", "Survior", "FareWell to Arms"],
+        ["King", "Piper", "Larson", "Stewart", "Anderson"],
+	["Eagle", "Wolf", "Devils", "Tornados", "Sharks"],
+	["Raleigh", "NYC", "Atlanta", "Los Angeles", "Tampa"],
+        ["Fluffly", "Oreo", "Brownie", "Dancer"]
+	]
+
+
+def Pause():
+#Pause function
+	pase = raw_input("Press Enter.. ")
+	return
+
+
+def Banner():
+#Prints banner and clear screen at each new page
+	#clear screen
+	os.system('cls' if os.name == 'nt' else 'clear')
+	print("   _____                        ")
+        print("   /  _  \   ____   ____   ____  ")
+        print("  /  /_\  \ /    \ /  _ \ /    \ ")
+        print(" /    |    \   |  (  <_> )   |  \ ")
+        print(" \____|__  /___|  /\____/|___|  /")
+        print("         \/     \/            \/")
+	print("__________________________________")
+	#return to function that called
+	return
+
+def Del(profile):
+	Banner()
+	print("----------Delete entry")
+	choice = profile["Name"]
+	article = raw_input("Enter entry you want to delete: ")
+	if article:
+		try:
+			del profile[article]
+			print(article + " Deleted")
+			#save Changes
+			#make File for info
+			file_name = profile["Name"] + ".txt"
+        		#Dump to file with json this also close the file with
+       			with open(file_name, "w+") as outfile:
+        			json.dump(profile, outfile)
+
+			Pause()
+			Browse(choice)
+		except:
+			Browse(choice)
+	else:
+		Browse(choice)
+
+def Edit(profile):
+	Banner()
+	print("----------Edit Entrys")
+
+	#Make choice an string to pass back to  browse
+	choice = profile["Name"]
+
+	# generate Random password to use if wanted
+	s = "abcdefghijklmnopqrstuvwxyz01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()?"
+	passlen = 10
+	p =  "".join(random.sample(s,passlen ))
+	print("Random Password Generated: " + p)
+
+	article = raw_input("Enter a new entry for new data or an existing entry to edit: ")
+
+	if article:
+		#compare profile to current entrys in profile
+		if article in profile:
+			print("This entry already exists! This will Erase current data for that entry!")
+			info = raw_input("Enter Data: ")
+			profile[article] = info
+		else:
+			info = raw_input("Enter Data: ")
+			profile[article] = info
+	else:
+		Browse(choice)
+	#Save Data
+	#make File for info
+        file_name = profile["Name"] + ".txt"
+        #Dump to file with json this also close the file with
+        with open(file_name, "w+") as outfile:
+                json.dump(profile, outfile)
+        Pause()
+        Browse(choice)
+
+#def Create_random():
+def Browse(choice):
+	Banner()
+	print("----------Browse Profile")
+	#open File
+	with open(choice + ".txt") as json_file:
+		profile = json.load(json_file)
+
+	#Loopnthrough json dict data show profile info
+	for x in profile:
+		print(x  + ": " + profile[x])
+
+	article = raw_input("To view details type that Entry \nTo create a new Entry type new \nTo delete an entry type del \nleave blank for home: ")
+	if article:
+		#compare profile to  key names
+		for x in profile:
+			if article == x:
+				print(profile[x])
+				Pause()
+				#return to Browse to ask for new option
+				Browse(profile)
+			#goto edit passing the profile
+		if article == "new":
+			Edit(profile)
+		if article == "del":
+			Del(profile)
+		else:
+			Browse(choice)
+	#if the is no entry redirect home
+	else:
+		Home()
+
+
+def Create():
+	Banner()
+	print("----------Create Profile")
+	#make random list global to call from
+	global rand
+	#Create Dictionary for the info
+	profile ={
+	}
+
+	thislist = [
+	"Name",
+
+	"Sex",
+
+	"FavoriteBook",
+
+	"MothersMaiden",
+
+	"HighSchoolMascot",
+
+	"HomeTown"
+	]
+	#create counter for random list
+	counter = 0
+	print("Create a new profile by entering info or press r at any question for a random insert:  ")
+	#loop through dictonary 
+	for x in thislist:
+		print(x + ": ")
+		info  = raw_input()
+		#checks to see if random wanted
+		if info == "":
+			#then find the length of the relavent row and genatre a random profile to fill the info input
+			max = len(rand[counter])
+			random_info = rand[counter][random.randint(0,1)]
+			profile[x]=random_info
+			print profile[x]
+			counter += 1
+		else:
+			counter += 1
+			profile[x]=info
+		
+	#make File for info
+	file_name = profile["Name"] + ".txt"
+	#Dump to file with json this also close the file with
+	with open(file_name, "w+") as outfile:
+		json.dump(profile, outfile)
+	Pause()
+	return
+
+def Home():
+	Banner()
+	print("Working  Profiles: ")
+	#Run through and print files in folder here
+	print("PROFILES: ")
+	listOfFiles = os.listdir('.')
+	pattern = "*.txt"
+	for entry in listOfFiles:
+		if fnmatch.fnmatch(entry, pattern):
+			print(entry)
+
+	print("Type name of profile to browse or new to create a new one: ")
+	choice = raw_input("Enter profile: ")
+	if choice:
+		if choice == "new":
+			Create()
+	        for entry in listOfFiles:
+        	        if fnmatch.fnmatch(entry, pattern):
+				if choice + ".txt" == entry:
+					Browse(choice)
+		else:
+			Home()
+	else:
+		Home()
+
+#run begining
+Home()
+
