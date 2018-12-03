@@ -1,16 +1,33 @@
 
 #ANon
 # an system for storing password and user idenites  to better stay anon online
-
+#Desifned by Duncan ANdrews November 2018
 #Libraies
-import os
+try:
+	import os
 
-import json
+	import json
 
-import random
+	import random
 
-import fnmatch
+	import fnmatch
+
+	import os.path
+
+
+	from Crypto.Hash import SHA256
+	from Crypto.Cipher import AES
+	import os, random, sys, pkg_resources
+
+
+except:
+	print("You are missing one of the libraries, perhaps you can install it.\nTry using 'pip python install  --library--'")
+	print("\nLIBRARIES NEEDED: \njson \nrandom \nfnmatch \nCrypto \nCryptograpy")
+	Pause()
 #global Varibles
+
+key = " "
+cipher_suite= ""
 #Random values for profile creatiom
 rand = [
 	["john","andy","sarah","Jess"],
@@ -24,7 +41,6 @@ rand = [
 
 
 def Pause():
-#Pause function
 	pase = raw_input("Press Enter.. ")
 	return
 
@@ -43,15 +59,119 @@ def Banner():
 	#return to function that called
 	return
 
+
+
+
+
+
+ 
+def encrypt(key, filename):
+        chunksize = 64 * 1024
+        outFile = os.path.join(os.path.dirname(filename), "(encrypted)"+os.path.basename(filename))
+        filesize = str(os.path.getsize(filename)).zfill(16)
+        IV = ''
+ 
+        for i in range(16):
+                IV += chr(random.randint(0, 0xFF))
+       
+        encryptor = AES.new(key, AES.MODE_CBC, IV)
+ 
+        with open(filename, "rb") as infile:
+                with open(outFile, "wb") as outfile:
+                        outfile.write(filesize)
+                        outfile.write(IV)
+                        while True:
+                                chunk = infile.read(chunksize)
+                               
+                                if len(chunk) == 0:
+                                        break
+ 
+                                elif len(chunk) % 16 !=0:
+                                        chunk += ' ' *  (16 - (len(chunk) % 16))
+ 
+                                outfile.write(encryptor.encrypt(chunk))
+ 
+ 
+def decrypt(key, filename):
+        outFile = os.path.join(os.path.dirname(filename), os.path.basename(filename[11:]))
+        chunksize = 64 * 1024
+        with open(filename, "rb") as infile:
+                filesize = infile.read(16)
+                IV = infile.read(16)
+
+                decryptor = AES.new(key, AES.MODE_CBC, IV)
+                with open(outFile, "wb") as outfile:
+                        while True:
+                                chunk = infile.read(chunksize)
+                                if len(chunk) == 0:
+                                        break
+
+                                outfile.write(decryptor.decrypt(chunk))
+
+                        outfile.truncate(int(filesize))
+
+def allfiles():
+        allFiles = []
+        for root, subfiles, files in os.walk(os.getcwd()):
+                for names in files:
+                        allFiles.append(os.path.join(root, names))
+
+        return allFiles
+
+def Save():
+	Banner()
+	print("----------Encryption Options")
+	print('\x1b[0;36;40m' + "Working  Profiles: " + '\x1b[0m')
+        #Run through and print files in folder here
+        listOfFiles = os.listdir('.')
+        pattern = "*.txt"
+        for entry in listOfFiles:
+                if fnmatch.fnmatch(entry, pattern):
+                        print('\x1b[0;34;40m' + entry + '\x1b[0m')
+	print("By default and for safety all other files in directory that are not encrypted\nwill be when the Encryption option is choosen")
+	choice = raw_input("Do you want to (E)ncrypt or (D)ecrypt? ")
+	password = raw_input("Enter the password: ")
+	encFiles = allfiles()
+	if choice == "E":
+        	for Tfiles in encFiles:
+                	if os.path.basename(Tfiles).startswith("(encrypted)"):
+                        	print "%s is already encrypted" %str(Tfiles)
+                        	pass
+	                elif Tfiles == os.path.join(os.getcwd(), sys.argv[0]):
+        	                pass
+                	else:
+                        	encrypt(SHA256.new(password).digest(), str(Tfiles))
+                        	print "Done encrypting %s" %str(Tfiles)
+                       		os.remove(Tfiles)
+
+	elif choice == "D":
+        	filename = raw_input("Enter the filename to decrypt: ")
+        	if not os.path.exists(filename):
+        	        print "The file does not exist"
+        	        Save()
+        	elif not filename.startswith("(encrypted)"):
+        	        print "%s is already not encrypted" %filename
+        	        Save()
+        	else:
+        	        decrypt(SHA256.new(password).digest(), filename)
+        	        print "Done decrypting %s" %filename
+        	        os.remove(filename)
+	else:
+	        print "Please choose a valid command."
+	        Save()
+	Pause()
+
 def Del(profile):
 	Banner()
 	print("----------Delete entry")
 	choice = profile["Name"]
+	for x in profile:
+                print('\x1b[0;36;40m' + x + '\x1b[0m')
 	article = raw_input("Enter entry you want to delete: ")
 	if article:
 		try:
 			del profile[article]
-			print(article + " Deleted")
+			print('\x1b[0;31;40m' + article + " Deleted"+ '\x1b[0m')
 			#save Changes
 			#make File for info
 			file_name = profile["Name"] + ".txt"
@@ -73,18 +193,12 @@ def Edit(profile):
 	#Make choice an string to pass back to  browse
 	choice = profile["Name"]
 
-	# generate Random password to use if wanted
-	s = "abcdefghijklmnopqrstuvwxyz01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()?"
-	passlen = 10
-	p =  "".join(random.sample(s,passlen ))
-	print("Random Password Generated: " + p)
-
 	article = raw_input("Enter a new entry for new data or an existing entry to edit: ")
 
 	if article:
 		#compare profile to current entrys in profile
 		if article in profile:
-			print("This entry already exists! This will Erase current data for that entry!")
+			print('\x1b[0;31;40m' + "This entry already exists! This will Erase current data for that entry!"+ '\x1b[0m')
 			info = raw_input("Enter Data: ")
 			profile[article] = info
 		else:
@@ -111,17 +225,17 @@ def Browse(choice):
 
 	#Loopnthrough json dict data show profile info
 	for x in profile:
-		print(x  + ": " + profile[x])
+		print('\x1b[0;36;40m' + x + '\x1b[0m' + ": " + '\x1b[0;34;40m' +  profile[x] + '\x1b[0m')
 
 	article = raw_input("To view details type that Entry \nTo create a new Entry type new \nTo delete an entry type del \nleave blank for home: ")
 	if article:
 		#compare profile to  key names
 		for x in profile:
 			if article == x:
-				print(profile[x])
+				print('\x1b[0;34;40m' + profile[x] + '\x1b[0m')
 				Pause()
 				#return to Browse to ask for new option
-				Browse(profile)
+				Browse(choice)
 			#goto edit passing the profile
 		if article == "new":
 			Edit(profile)
@@ -158,10 +272,11 @@ def Create():
 	]
 	#create counter for random list
 	counter = 0
-	print("Create a new profile by entering info or press r at any question for a random insert:  ")
+	print("Welcome to the Profile Wizard!\nCreate a new profile by entering info followed by the Enter key or\nor just press Enter at any question for a random answer.")
+
 	#loop through dictonary 
 	for x in thislist:
-		print(x + ": ")
+		print('\x1b[0;36;40m' + x + ': ' +  '\x1b[0m')
 		info  = raw_input()
 		#checks to see if random wanted
 		if info == "":
@@ -185,20 +300,25 @@ def Create():
 
 def Home():
 	Banner()
-	print("Working  Profiles: ")
+	print("----------Home")
+	print('\x1b[0;36;40m' + "Working  Profiles: " + '\x1b[0m')
 	#Run through and print files in folder here
-	print("PROFILES: ")
 	listOfFiles = os.listdir('.')
 	pattern = "*.txt"
 	for entry in listOfFiles:
 		if fnmatch.fnmatch(entry, pattern):
-			print(entry)
-
-	print("Type name of profile to browse or new to create a new one: ")
-	choice = raw_input("Enter profile: ")
+			print('\x1b[0;34;40m' + entry + '\x1b[0m')
+	print('Options:')
+	print("1. Make new Profile\n2. Profile Encryption options\n3. Exit")
+	print("Type a number of an option, or type the of name of profile view it\nThe profile must not be encrypted to view.")
+	choice = raw_input("Enter choice: ")
 	if choice:
-		if choice == "new":
+		if choice == '1':
 			Create()
+		if choice == '2':
+			Save()
+		if choice =='3':
+			raise SystemExit
 	        for entry in listOfFiles:
         	        if fnmatch.fnmatch(entry, pattern):
 				if choice + ".txt" == entry:
@@ -210,4 +330,5 @@ def Home():
 
 #run begining
 Home()
+
 
