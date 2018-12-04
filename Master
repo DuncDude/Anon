@@ -36,7 +36,10 @@ rand = [
         ["King", "Piper", "Larson", "Stewart", "Anderson"],
 	["Eagle", "Wolf", "Devils", "Tornados", "Sharks"],
 	["Raleigh", "NYC", "Atlanta", "Los Angeles", "Tampa"],
-        ["Fluffly", "Oreo", "Brownie", "Dancer"]
+        ["Fluffly", "Oreo", "Brownie", "Dancer"],
+	["CRV", "Accord", "Camaro", "Eclipse", "GTR", "Impala", "F150", "Mustang"],
+	["Pizza", "HotDogs", "Fries", "Pasta", "Gyro"],
+	["Greg", "Nathan", "Carl", "Max"]
 	]
 
 
@@ -129,36 +132,41 @@ def Save():
                 if fnmatch.fnmatch(entry, pattern):
                         print('\x1b[0;34;40m' + entry + '\x1b[0m')
 	print("By default and for safety all other files in directory that are not encrypted\nwill be when the Encryption option is choosen")
-	choice = raw_input("Do you want to (E)ncrypt or (D)ecrypt? ")
-	password = raw_input("Enter the password: ")
-	encFiles = allfiles()
-	if choice == "E":
-        	for Tfiles in encFiles:
-                	if os.path.basename(Tfiles).startswith("(encrypted)"):
-                        	print "%s is already encrypted" %str(Tfiles)
-                        	pass
-	                elif Tfiles == os.path.join(os.getcwd(), sys.argv[0]):
-        	                pass
-                	else:
-                        	encrypt(SHA256.new(password).digest(), str(Tfiles))
-                        	print "Done encrypting %s" %str(Tfiles)
-                       		os.remove(Tfiles)
-
-	elif choice == "D":
-        	filename = raw_input("Enter the filename to decrypt: ")
-        	if not os.path.exists(filename):
-        	        print "The file does not exist"
-        	        Save()
-        	elif not filename.startswith("(encrypted)"):
-        	        print "%s is already not encrypted" %filename
-        	        Save()
-        	else:
-        	        decrypt(SHA256.new(password).digest(), filename)
-        	        print "Done decrypting %s" %filename
-        	        os.remove(filename)
+	choice = raw_input("Do you want to (E)ncrypt or (D)ecrypt? Or leave Blank to return Home: ")
+	if  choice == '':
+		Home()
+	password1 = raw_input("Enter the password: ")
+	password = raw_input("Enter the password again: ")
+	if  password1 == password:
+		encFiles = allfiles()
+		if choice == "E":
+	        	for Tfiles in encFiles:
+	                	if os.path.basename(Tfiles).startswith("(encrypted)"):
+	                        	print "%s is already encrypted" %str(Tfiles)
+	                        	pass
+		                elif Tfiles == os.path.join(os.getcwd(), sys.argv[0]):
+	        	                pass
+	                	else:
+	                        	encrypt(SHA256.new(password).digest(), str(Tfiles))
+	                        	print "Done encrypting %s" %str(Tfiles)
+	                       		os.remove(Tfiles)
+	
+		elif choice == "D":
+	        	filename = raw_input("Enter the filename to decrypt: ")
+	        	if not os.path.exists(filename):
+	        	        print "The file does not exist"
+	        	        Save()
+	        	elif not filename.startswith("(encrypted)"):
+	        	        print "%s is already not encrypted" %filename
+	        	        Save()
+	        	else:
+	        	        decrypt(SHA256.new(password).digest(), filename)
+	        	        print "Done decrypting %s" %filename
+	        	        os.remove(filename)
 	else:
-	        print "Please choose a valid command."
-	        Save()
+	        print ('\x1b[0;31;40m' + "Passwords do not match!" + '\x1b[0m')
+	        Pause()
+		Save()
 	Pause()
 
 def Del(profile):
@@ -192,7 +200,15 @@ def Edit(profile):
 
 	#Make choice an string to pass back to  browse
 	choice = profile["Name"]
-
+	#Generate a random password if wanted to use
+	s = "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	#pass word length
+	passlen = 10
+	p = "".join(random.sample(s,passlen))
+	print ("Random Password: " + p)
+	for x in profile:
+	        print('\x1b[0;36;40m' + x + '\x1b[0m')
+	#
 	article = raw_input("Enter a new entry for new data or an existing entry to edit: ")
 
 	if article:
@@ -268,7 +284,15 @@ def Create():
 
 	"HighSchoolMascot",
 
-	"HomeTown"
+	"HomeTown",
+
+	"PetsName",
+
+	"FirstCar",
+
+	"FavoriteFood",
+
+	"FathersMiddleName"
 	]
 	#create counter for random list
 	counter = 0
@@ -309,8 +333,8 @@ def Home():
 		if fnmatch.fnmatch(entry, pattern):
 			print('\x1b[0;34;40m' + entry + '\x1b[0m')
 	print('Options:')
-	print("1. Make new Profile\n2. Profile Encryption options\n3. Exit")
-	print("Type a number of an option, or type the of name of profile view it\nThe profile must not be encrypted to view.")
+	print("1. Make new Profile\n2. Profile Encryption/Decryption options\n3. Exit")
+	print("Type a number of an option, or type the of name of a profile view or edit that profile\nThe profile must not be encrypted to view.")
 	choice = raw_input("Enter choice: ")
 	if choice:
 		if choice == '1':
@@ -330,5 +354,6 @@ def Home():
 
 #run begining
 Home()
+
 
 
